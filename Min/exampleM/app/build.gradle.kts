@@ -59,6 +59,7 @@ dependencies {
 
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
+    implementation(libs.androidx.constraintlayout.compose.android)
     kapt(libs.room.compiler)
 
     testImplementation(libs.junit)

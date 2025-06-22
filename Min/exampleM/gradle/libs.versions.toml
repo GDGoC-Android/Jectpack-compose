@@ -13,7 +13,8 @@ navigationRuntimeAndroid = "2.9.0"
 navigationComposeJvmstubs = "2.9.0"
 composeMaterial = "1.4.1"
 runtimeLivedata = "1.8.3"
-room = "2.7.2" # ✅ 정확한 버전 통합
+room = "2.7.2"
+constraintlayoutComposeAndroid = "1.1.1" # ✅ 정확한 버전 통합
 
 [libraries]
 coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
@@ -44,6 +45,7 @@ androidx-runtime-livedata = { group = "androidx.compose.runtime", name = "runtim
 room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
 room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
 room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
+androidx-constraintlayout-compose-android = { group = "androidx.constraintlayout", name = "constraintlayout-compose-android", version.ref = "constraintlayoutComposeAndroid" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
