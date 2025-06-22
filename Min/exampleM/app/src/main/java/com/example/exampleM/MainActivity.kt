@@ -1,25 +1,23 @@
 package com.example.exampleM
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.material3.*
-import androidx.compose.ui.graphics.Color
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.Alignment
-import androidx.compose.runtime.*
-import androidx.compose.animation.*
-import androidx.compose.animation.core.*
-
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import com.example.exampleM.screens.Contacts
+import com.example.exampleM.screens.Favorites
+import com.example.exampleM.screens.Home
 import com.example.exampleM.ui.theme.ExampleMTheme
 
 class MainActivity : ComponentActivity() {
@@ -27,7 +25,6 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             ExampleMTheme {
-                // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
@@ -39,83 +36,74 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@OptIn(ExperimentalAnimationApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun MainScreen() {
-    var boxVisible by remember { mutableStateOf(true) }
+    val navController = rememberNavController()
 
-    val onClick = { newState : Boolean ->
-        boxVisible = newState
-    }
-
-    Column(
-        Modifier.padding(20.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Row(
-            Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            Crossfade(
-                targetState = boxVisible,
-                animationSpec = tween(5000)
-            ) { visible ->
-                when (visible) {
-                    true -> CustomButton(text = "Hide", targetState = false,
-                        onClick = onClick, bgColor = Color.Red)
-                    false -> CustomButton(text = "Show", targetState = true,
-                        onClick = onClick, bgColor = Color.Magenta)
-                }
-            }
-
+    Scaffold(
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = { Text("Bottom Navigation Demo") }
+            )
+        },
+        bottomBar = {
+            BottomNavigationBar(navController = navController)
         }
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        AnimatedVisibility(
-            visible = boxVisible,
-            enter = EnterTransition.None,
-            exit = ExitTransition.None
-        ) {
-            Row {
-                Box(
-                    Modifier
-                        .animateEnterExit(
-                            enter = fadeIn(animationSpec = tween(durationMillis = 5500)),
-                            exit = fadeOut(animationSpec = tween(durationMillis = 5500))
-                        )
-                        .size(width = 150.dp, height = 150.dp)
-                        .background(Color.Blue))
-                Spacer(modifier = Modifier.width(20.dp))
-                Box(
-                    Modifier
-                        .animateEnterExit(
-                            enter = slideInVertically(
-                                animationSpec = tween(durationMillis = 5500)),
-                            exit = slideOutVertically(
-                                animationSpec = tween(durationMillis = 5500))
-                        )
-                        .size(width = 150.dp, height = 150.dp)
-                        .background(Color.Red)
-                )
-            }
+    ) { innerPadding ->
+        Box(modifier = Modifier.padding(innerPadding)) {
+            NavigationHost(navController = navController)
         }
     }
 }
 
 @Composable
-fun CustomButton(text: String, targetState: Boolean,
-                 onClick: (Boolean) -> Unit, bgColor: Color = Color.Blue) {
+fun BottomNavigationBar(navController: NavHostController) {
+    val backStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = backStackEntry?.destination?.route
 
-    Button(
-        onClick = { onClick(targetState) },
-        colors= ButtonDefaults.buttonColors(containerColor = bgColor,
-            contentColor = Color.White)) {
-        Text(text)
+    NavigationBar {
+        NavBarItems.BarItems.forEach { navItem ->
+            NavigationBarItem(
+                selected = currentRoute == navItem.route,
+                onClick = {
+                    navController.navigate(navItem.route) {
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                },
+                icon = {
+                    Icon(
+                        imageVector = navItem.image,
+                        contentDescription = navItem.title
+                    )
+                },
+                label = {
+                    Text(text = navItem.title)
+                },
+                alwaysShowLabel = true
+            )
+        }
     }
 }
 
-@Preview(showBackground = true,  showSystemUi = true)
+@Composable
+fun NavigationHost(navController: NavHostController) {
+    NavHost(
+        navController = navController,
+        startDestination = NavRoutes.Home.route
+    ) {
+        composable(NavRoutes.Home.route) { Home() }
+        composable(NavRoutes.Contacts.route) { Contacts() }
+        composable(NavRoutes.Favorites.route) { Favorites() }
+    }
+}
+
+@Preview(showBackground = true)
 @Composable
 fun DefaultPreview() {
     ExampleMTheme {
