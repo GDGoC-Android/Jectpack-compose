@@ -10,14 +10,16 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.material3.Button
-import androidx.constraintlayout.compose.ConstraintLayout
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.layout.width
-import androidx.constraintlayout.compose.Dimension
-import androidx.compose.ui.unit.Dp
-import androidx.constraintlayout.compose.ConstraintSet
+import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.Alignment
 
 import com.example.exampleM.ui.theme.ExampleMTheme
 
@@ -40,55 +42,40 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun MainScreen() {
-    ConstraintLayout(Modifier.size(width = 350.dp, height = 220.dp)) {
-        val (button1, button2, button3) = createRefs()
 
-        val barrier = createEndBarrier(button1, button2)
+    Box(contentAlignment = Alignment.CenterEnd,
+        modifier = Modifier.size(height = 90.dp, width = 290.dp)) {
+        Text("TopStart", Modifier.align(Alignment.TopStart))
+        Text("TopCenter", Modifier.align(Alignment.TopCenter))
+        Text("TopEnd", Modifier.align(Alignment.TopEnd))
 
-        MyButton(text = "Button1", Modifier.width(100.dp).constrainAs(button1) {
-            top.linkTo(parent.top, margin = 30.dp)
-            start.linkTo(parent.start, margin = 8.dp)
-        })
+        Text("CenterStart", Modifier.align(Alignment.CenterStart))
+        Text("Center", Modifier.align(Alignment.Center))
+        Text(text = "CenterEnd", Modifier.align(Alignment.CenterEnd))
 
-        MyButton(text = "Button2", Modifier.width(150.dp).constrainAs(button2) {
-            top.linkTo(button1.bottom, margin = 20.dp)
-            start.linkTo(parent.start, margin = 8.dp)
-        })
-
-        MyButton(text = "Button3", Modifier.constrainAs(button3) {
-            linkTo(parent.top, parent.bottom,
-                topMargin = 8.dp, bottomMargin = 8.dp)
-            linkTo(button1.end, parent.end, startMargin = 30.dp,
-                endMargin = 8.dp)
-            start.linkTo(barrier, margin = 30.dp)
-            width = Dimension.fillToConstraints
-            height = Dimension.fillToConstraints
-        })
+        Text("BottomStart", Modifier.align(Alignment.BottomStart))
+        Text("BottomCenter", Modifier.align(Alignment.BottomCenter))
+        Text("BottomEnd", Modifier.align(Alignment.BottomEnd))
     }
-}
 
-private fun myConstraintSet(margin: Dp): ConstraintSet {
-    return ConstraintSet {
-        val button1 = createRefFor("button1")
 
-        constrain(button1) {
-            linkTo(parent.top, parent.bottom, topMargin = margin,
-                bottomMargin = margin)
-            linkTo(parent.start, parent.end, startMargin = margin,
-                endMargin = margin)
-            width = Dimension.fillToConstraints
-            height = Dimension.fillToConstraints
-        }
-    }
+    // Box(Modifier.size(200.dp).clip(RoundedCornerShape(30.dp)).background(Color.Blue))
 }
 
 @Composable
-fun MyButton(text: String, modifier: Modifier = Modifier) {
-    Button(
-        onClick = { },
-        modifier = modifier
-    ) {
-        Text(text)
+fun TextCell(text: String, modifier: Modifier = Modifier,  fontSize: Int = 150 ) {
+
+    val cellModifier = Modifier
+        .padding(4.dp)
+        .border(width = 5.dp, color = Color.Black)
+
+    Surface {
+        Text(
+            text = text, cellModifier.then(modifier),
+            fontSize = fontSize.sp,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center
+        )
     }
 }
 
