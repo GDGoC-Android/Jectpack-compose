@@ -1,81 +1,144 @@
 package com.example.exampleM
 
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
+import com.example.exampleM.ui.theme.ExampleMTheme
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Card
+import androidx.compose.ui.Alignment
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
+import android.widget.Toast
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
-import com.example.exampleM.ui.theme.ExampleMTheme
+import androidx.compose.foundation.*
+import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.material3.*
+import androidx.compose.animation.AnimatedVisibility
+
+import kotlinx.coroutines.launch
+
+import coil.compose.rememberImagePainter
 
 class MainActivity : ComponentActivity() {
+
+    private var itemArray: Array<String>? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
+
+        itemArray = resources.getStringArray(R.array.car_array)
+
         super.onCreate(savedInstanceState)
-
-        val itemArray = try {
-            resources.getStringArray(R.array.car_array)
-        } catch (e: Exception) {
-            arrayOf("Cadillac Eldorado", "Ford Fairlane", "Plymouth Fury") // fallback
-        }
-
         setContent {
             ExampleMTheme {
+                // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    MainScreen(itemArray = itemArray)
+                    MainScreen(itemArray = itemArray as Array<out String>)
                 }
             }
         }
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class, androidx.compose.animation.ExperimentalAnimationApi::class)
 @Composable
-fun MainScreen(itemArray: Array<String>) {
+fun MainScreen(itemArray: Array<out String>) {
+
+    val listState = rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
+    val displayButton = listState.firstVisibleItemIndex > 5
+
     val context = LocalContext.current
-    LazyColumn {
-        items(itemArray) { model ->
-            MyListItem(item = model) {
-                Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+    val groupedItems = itemArray.groupBy { it.substringBefore(' ') }
+
+    val onListItemClick = { text : String ->
+
+        Toast.makeText(
+            context,
+            text,
+            Toast.LENGTH_SHORT
+        ).show()
+    }
+
+    Box {
+        LazyColumn(
+            state = listState,
+            contentPadding = PaddingValues(bottom = 40.dp)
+        ) {
+            groupedItems.forEach { (manufacturer, models) ->
+
+                stickyHeader {
+                    Text(
+                        text = manufacturer,
+                        color = Color.White,
+                        modifier = Modifier
+                            .background(Color.Gray)
+                            .padding(5.dp)
+                            .fillMaxWidth()
+                    )
+                }
+
+                items(models) { model ->
+                    MyListItem(item = model, onItemClick = onListItemClick)
+                }
+            }
+        }
+
+        AnimatedVisibility(visible = displayButton,
+            Modifier.align(Alignment.BottomCenter)) {
+
+            OutlinedButton(
+                onClick = {
+                    coroutineScope.launch {
+                        listState.scrollToItem(0)
+                    }
+                },
+                border = BorderStroke(1.dp, Color.Gray),
+                shape = RoundedCornerShape(50),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = Color.DarkGray
+                ),
+                modifier = Modifier.padding(5.dp)
+            ) {
+                Text(text = "Top")
             }
         }
     }
 }
 
+
 @Composable
 fun MyListItem(item: String, onItemClick: (String) -> Unit) {
     Card(
-        modifier = Modifier
+        Modifier
             .padding(8.dp)
             .fillMaxWidth()
             .clickable { onItemClick(item) },
         shape = RoundedCornerShape(10.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(8.dp)
-        ) {
+        elevation = 5.dp) {
+
+        Row(verticalAlignment = Alignment.CenterVertically) {
             ImageLoader(item)
             Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = item,
-                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
+                style = MaterialTheme.typography.headlineLarge,
                 modifier = Modifier.padding(8.dp)
             )
         }
@@ -84,18 +147,12 @@ fun MyListItem(item: String, onItemClick: (String) -> Unit) {
 
 @Composable
 fun ImageLoader(item: String) {
-    val context = LocalContext.current
-    val modelName = item.substringBefore(" ").trim().ifEmpty { "default" }
-    val url = "https://www.ebookfrenzy.com/book_examples/car_logos/${modelName}_logo.png"
 
-    AsyncImage(
-        model = ImageRequest.Builder(context)
-            .data(url)
-            .crossfade(true)
-            .error(android.R.drawable.ic_menu_report_image) // 오류 시 기본 이미지
-            .placeholder(android.R.drawable.ic_menu_gallery) // 로딩 중 기본 이미지
-            .build(),
-        contentDescription = "Car image",
+    val url = "https://www.ebookfrenzy.com/book_examples/car_logos/" + item.substringBefore(" ") + "_logo.png"
+
+    Image(
+        painter = rememberImagePainter(url),
+        contentDescription = "car image",
         contentScale = ContentScale.Fit,
         modifier = Modifier.size(75.dp)
     )
@@ -104,7 +161,10 @@ fun ImageLoader(item: String) {
 @Preview(showBackground = true)
 @Composable
 fun DefaultPreview() {
+    val itemArray: Array<String> = arrayOf("Cadillac Eldorado",
+        "Ford Fairlane", "Plymouth Fury")
+
     ExampleMTheme {
-        MainScreen(itemArray = arrayOf("Cadillac Eldorado", "Ford Fairlane", "Plymouth Fury"))
+        MainScreen(itemArray = itemArray)
     }
 }
