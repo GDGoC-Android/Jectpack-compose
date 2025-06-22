@@ -10,23 +10,15 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Button
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.dp
-import androidx.compose.animation.core.*
-import androidx.compose.foundation.background
+import androidx.compose.material3.*
 import androidx.compose.ui.graphics.Color
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.unit.Dp
-import androidx.compose.animation.core.Spring.DampingRatioHighBouncy
-import androidx.compose.animation.core.Spring.StiffnessVeryLow
-import androidx.compose.animation.animateColor
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.Alignment
+import androidx.compose.runtime.*
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 
 import com.example.exampleM.ui.theme.ExampleMTheme
 
@@ -40,211 +32,93 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    RotationDemo()
+                    MainScreen()
                 }
             }
         }
     }
 }
 
-enum class BoxColor {
-    Red, Magenta
-}
-
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun RotationDemo() {
+fun MainScreen() {
+    var boxVisible by remember { mutableStateOf(true) }
 
-    var rotated by remember { mutableStateOf(false) }
+    val onClick = { newState : Boolean ->
+        boxVisible = newState
+    }
 
-    val angle by animateFloatAsState(
-        targetValue = if (rotated) 360f else 0f,
-        animationSpec = tween(durationMillis = 2500, easing = LinearEasing)
-    )
-
-    Column(horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.fillMaxWidth()) {
-        Image(
-            painter = painterResource(R.drawable.propeller),
-            contentDescription = "fan",
-            modifier = Modifier
-                .rotate(angle)
-                .padding(10.dp)
-                .size(300.dp)
-        )
-
-        Button(
-            onClick = { rotated = !rotated },
-            modifier = Modifier.padding(10.dp)
+    Column(
+        Modifier.padding(20.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            Text(text = "Rotate Propeller")
+            Crossfade(
+                targetState = boxVisible,
+                animationSpec = tween(5000)
+            ) { visible ->
+                when (visible) {
+                    true -> CustomButton(text = "Hide", targetState = false,
+                        onClick = onClick, bgColor = Color.Red)
+                    false -> CustomButton(text = "Show", targetState = true,
+                        onClick = onClick, bgColor = Color.Magenta)
+                }
+            }
+
+        }
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        AnimatedVisibility(
+            visible = boxVisible,
+            enter = EnterTransition.None,
+            exit = ExitTransition.None
+        ) {
+            Row {
+                Box(
+                    Modifier
+                        .animateEnterExit(
+                            enter = fadeIn(animationSpec = tween(durationMillis = 5500)),
+                            exit = fadeOut(animationSpec = tween(durationMillis = 5500))
+                        )
+                        .size(width = 150.dp, height = 150.dp)
+                        .background(Color.Blue))
+                Spacer(modifier = Modifier.width(20.dp))
+                Box(
+                    Modifier
+                        .animateEnterExit(
+                            enter = slideInVertically(
+                                animationSpec = tween(durationMillis = 5500)),
+                            exit = slideOutVertically(
+                                animationSpec = tween(durationMillis = 5500))
+                        )
+                        .size(width = 150.dp, height = 150.dp)
+                        .background(Color.Red)
+                )
+            }
         }
     }
 }
 
-@Preview(showBackground = true)
+@Composable
+fun CustomButton(text: String, targetState: Boolean,
+                 onClick: (Boolean) -> Unit, bgColor: Color = Color.Blue) {
+
+    Button(
+        onClick = { onClick(targetState) },
+        colors= ButtonDefaults.buttonColors(containerColor = bgColor,
+            contentColor = Color.White)) {
+        Text(text)
+    }
+}
+
+@Preview(showBackground = true,  showSystemUi = true)
 @Composable
 fun DefaultPreview() {
     ExampleMTheme {
-        RotationDemo()
-    }
-}
-
-@Composable
-fun ColorChangeDemo() {
-
-    var colorState by remember { mutableStateOf(BoxColor.Red) }
-
-    val animatedColor: Color by animateColorAsState(
-        targetValue = when (colorState) {
-            BoxColor.Red -> Color.Magenta
-            BoxColor.Magenta -> Color.Red
-        },
-        animationSpec = tween(4500)
-    )
-
-    Column(horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.fillMaxWidth()) {
-        Box(
-            modifier = Modifier
-                .padding(20.dp)
-                .size(200.dp)
-                .background(animatedColor)
-        )
-
-        Button(
-            onClick = {
-                colorState = when (colorState) {
-                    BoxColor.Red -> BoxColor.Magenta
-                    BoxColor.Magenta -> BoxColor.Red
-                }
-            },
-            modifier = Modifier.padding(10.dp)
-        ) {
-            Text(text = "Change Color")
-        }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun ColorChangePreview() {
-    ExampleMTheme {
-        ColorChangeDemo()
-    }
-}
-
-enum class BoxPosition {
-    Start, End
-}
-
-@Composable
-fun MotionDemo() {
-
-    val screenWidth = (LocalConfiguration.current.screenWidthDp.dp)
-    var boxState by remember { mutableStateOf(BoxPosition.Start)}
-    val boxSideLength = 70.dp
-
-    val animatedOffset: Dp by animateDpAsState(
-        targetValue = when (boxState) {
-            BoxPosition.Start -> 0.dp
-            BoxPosition.End -> screenWidth - boxSideLength
-        },
-        spring(dampingRatio = DampingRatioHighBouncy, stiffness = StiffnessVeryLow)
-    )
-
-    Column(modifier = Modifier.fillMaxWidth()) {
-        Box(
-            modifier = Modifier
-                .offset(x = animatedOffset, y = 20.dp)
-                .size(boxSideLength)
-                .background(Color.Red)
-        )
-
-        Spacer(modifier = Modifier.height(50.dp))
-
-        Button(
-            onClick = {
-                boxState = when (boxState) {
-                    BoxPosition.Start -> BoxPosition.End
-                    BoxPosition.End -> BoxPosition.Start
-                }
-            },
-            modifier = Modifier.padding(20.dp)
-                .align(Alignment.CenterHorizontally)
-        ) {
-            Text(text = "Move Box")
-        }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun MotionDemoPreview() {
-    ExampleMTheme {
-        MotionDemo()
-    }
-}
-
-@Composable
-fun TransitionDemo() {
-    var boxState by remember { mutableStateOf(BoxPosition.Start)}
-    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
-    val transition = updateTransition(targetState = boxState,
-        label = "Color and Motion")
-
-    val animatedColor: Color by transition.animateColor(
-
-        transitionSpec = {
-            tween(4000)
-        }
-
-    ) { state ->
-        when (state) {
-            BoxPosition.Start -> Color.Red
-            BoxPosition.End -> Color.Magenta
-        }
-    }
-
-    val animatedOffset: Dp by transition.animateDp(
-
-        transitionSpec = {
-            tween(4000)
-        }
-    ) { state ->
-        when (state) {
-            BoxPosition.Start -> 0.dp
-            BoxPosition.End -> screenWidth - 70.dp
-        }
-    }
-
-    Column(modifier = Modifier.fillMaxWidth()) {
-        Box(
-            modifier = Modifier
-                .offset(x = animatedOffset, y = 20.dp)
-                .size(70.dp)
-                .background(animatedColor)
-        )
-        Spacer(modifier = Modifier.height(50.dp))
-
-        Button(
-            onClick = {
-                boxState = when (boxState) {
-                    BoxPosition.Start -> BoxPosition.End
-                    BoxPosition.End -> BoxPosition.Start
-                }
-            },
-            modifier = Modifier.padding(20.dp)
-                .align(Alignment.CenterHorizontally)
-        ) {
-            Text(text = "Start Animation")
-        }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun TransitionDemoPreview() {
-    ExampleMTheme {
-        TransitionDemo()
+        MainScreen()
     }
 }
