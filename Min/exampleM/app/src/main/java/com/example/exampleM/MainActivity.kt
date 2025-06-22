@@ -10,16 +10,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Column
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.size
-import androidx.compose.ui.Alignment
+import android.content.res.Configuration.UI_MODE_NIGHT_YES
 
 import com.example.exampleM.ui.theme.ExampleMTheme
 
@@ -33,56 +30,93 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    MainScreen()
+                    Composable1()
                 }
             }
         }
     }
 }
 
+val LocalColor = staticCompositionLocalOf { Color(0xFFffdbcf) }
+
 @Composable
-fun MainScreen() {
+fun Composable1() {
 
-    Box(contentAlignment = Alignment.CenterEnd,
-        modifier = Modifier.size(height = 90.dp, width = 290.dp)) {
-        Text("TopStart", Modifier.align(Alignment.TopStart))
-        Text("TopCenter", Modifier.align(Alignment.TopCenter))
-        Text("TopEnd", Modifier.align(Alignment.TopEnd))
-
-        Text("CenterStart", Modifier.align(Alignment.CenterStart))
-        Text("Center", Modifier.align(Alignment.Center))
-        Text(text = "CenterEnd", Modifier.align(Alignment.CenterEnd))
-
-        Text("BottomStart", Modifier.align(Alignment.BottomStart))
-        Text("BottomCenter", Modifier.align(Alignment.BottomCenter))
-        Text("BottomEnd", Modifier.align(Alignment.BottomEnd))
+    var color = if (isSystemInDarkTheme()) {
+        Color(0xFFa08d87)
+    } else {
+        Color(0xFFffdbcf)
     }
 
+    Column {
+        Composable2()
 
-    // Box(Modifier.size(200.dp).clip(RoundedCornerShape(30.dp)).background(Color.Blue))
+        CompositionLocalProvider(LocalColor provides color) {
+            Composable3()
+        }
+
+    }
 }
 
 @Composable
-fun TextCell(text: String, modifier: Modifier = Modifier,  fontSize: Int = 150 ) {
+fun Composable2() {
+    Composable4()
+}
 
-    val cellModifier = Modifier
-        .padding(4.dp)
-        .border(width = 5.dp, color = Color.Black)
+@Composable
+fun Composable3() {
+    Text("Composable 3", modifier = Modifier.background(LocalColor.current))
 
-    Surface {
-        Text(
-            text = text, cellModifier.then(modifier),
-            fontSize = fontSize.sp,
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center
-        )
+    CompositionLocalProvider(LocalColor provides Color.Red) {
+        Composable5()
     }
+}
+
+@Composable
+fun Composable4() {
+    Composable6()
+}
+
+@Composable
+fun Composable5() {
+    Text("Composable 5", modifier = Modifier.background(LocalColor.current))
+
+    CompositionLocalProvider(LocalColor provides Color.Green) {
+        Composable7()
+    }
+
+    CompositionLocalProvider(LocalColor provides Color.Yellow) {
+        Composable8()
+    }
+}
+
+@Composable
+fun Composable6() {
+    Text("Composable 6")
+}
+
+@Composable
+fun Composable7() {
+    Text("Composable 7", modifier = Modifier.background(LocalColor.current))
+}
+
+@Composable
+fun Composable8() {
+    Text("Composable 8",  modifier = Modifier.background(LocalColor.current))
 }
 
 @Preview(showBackground = true)
 @Composable
 fun DefaultPreview() {
     ExampleMTheme {
-        MainScreen()
+        Composable1()
+    }
+}
+
+@Preview(showBackground = true, uiMode = UI_MODE_NIGHT_YES)
+@Composable
+fun DarkPreview() {
+    ExampleMTheme {
+        Composable1()
     }
 }
