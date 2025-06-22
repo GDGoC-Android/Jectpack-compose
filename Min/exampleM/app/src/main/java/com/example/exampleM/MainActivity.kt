@@ -6,41 +6,21 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.example.exampleM.ui.theme.ExampleMTheme
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Card
-import androidx.compose.ui.Alignment
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import android.widget.Toast
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.foundation.*
 import androidx.compose.ui.graphics.Color
-import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.material3.*
-import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.Alignment
+import com.example.exampleM.ui.theme.ExampleMTheme
 
-import kotlinx.coroutines.launch
-
-import coil.compose.rememberImagePainter
+import kotlin.math.roundToInt
 
 class MainActivity : ComponentActivity() {
-
-    private var itemArray: Array<String>? = null
-
     override fun onCreate(savedInstanceState: Bundle?) {
-
-        itemArray = resources.getStringArray(R.array.car_array)
-
         super.onCreate(savedInstanceState)
         setContent {
             ExampleMTheme {
@@ -49,122 +29,59 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    MainScreen(itemArray = itemArray as Array<out String>)
+                    MainScreen()
                 }
             }
         }
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class, androidx.compose.animation.ExperimentalAnimationApi::class)
 @Composable
-fun MainScreen(itemArray: Array<out String>) {
-
-    val listState = rememberLazyListState()
-    val coroutineScope = rememberCoroutineScope()
-    val displayButton = listState.firstVisibleItemIndex > 5
-
-    val context = LocalContext.current
-    val groupedItems = itemArray.groupBy { it.substringBefore(' ') }
-
-    val onListItemClick = { text : String ->
-
-        Toast.makeText(
-            context,
-            text,
-            Toast.LENGTH_SHORT
-        ).show()
-    }
-
-    Box {
-        LazyColumn(
-            state = listState,
-            contentPadding = PaddingValues(bottom = 40.dp)
-        ) {
-            groupedItems.forEach { (manufacturer, models) ->
-
-                stickyHeader {
-                    Text(
-                        text = manufacturer,
-                        color = Color.White,
-                        modifier = Modifier
-                            .background(Color.Gray)
-                            .padding(5.dp)
-                            .fillMaxWidth()
-                    )
-                }
-
-                items(models) { model ->
-                    MyListItem(item = model, onItemClick = onListItemClick)
-                }
-            }
-        }
-
-        AnimatedVisibility(visible = displayButton,
-            Modifier.align(Alignment.BottomCenter)) {
-
-            OutlinedButton(
-                onClick = {
-                    coroutineScope.launch {
-                        listState.scrollToItem(0)
-                    }
-                },
-                border = BorderStroke(1.dp, Color.Gray),
-                shape = RoundedCornerShape(50),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = Color.DarkGray
-                ),
-                modifier = Modifier.padding(5.dp)
-            ) {
-                Text(text = "Top")
-            }
-        }
-    }
-}
-
-
-@Composable
-fun MyListItem(item: String, onItemClick: (String) -> Unit) {
-    Card(
-        Modifier
-            .padding(8.dp)
-            .fillMaxWidth()
-            .clickable { onItemClick(item) },
-        shape = RoundedCornerShape(10.dp),
-        elevation = 5.dp) {
-
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            ImageLoader(item)
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = item,
-                style = MaterialTheme.typography.headlineLarge,
-                modifier = Modifier.padding(8.dp)
+fun MainScreen() {
+    Box(contentAlignment = Alignment.Center,
+        modifier = Modifier.size(120.dp, 80.dp)) {
+        Column {
+            ColorBox(
+                Modifier.exampleLayout(0f).background(Color.Blue)
+            )
+            ColorBox(
+                Modifier.exampleLayout(0.25f).background(Color.Green)
+            )
+            ColorBox(
+                Modifier.exampleLayout(0.5f).background(Color.Yellow)
+            )
+            ColorBox(
+                Modifier.exampleLayout(0.25f).background(Color.Red)
+            )
+            ColorBox(
+                Modifier.exampleLayout(0.0f).background(Color.Magenta)
             )
         }
     }
 }
 
+fun Modifier.exampleLayout(
+    fraction: Float
+) = layout { measurable, constraints ->
+    val placeable = measurable.measure(constraints)
+
+    val x = -(placeable.width * fraction).roundToInt()
+
+    layout(placeable.width, placeable.height) {
+        placeable.placeRelative(x = x, y = 0)
+    }
+
+}
+
 @Composable
-fun ImageLoader(item: String) {
-
-    val url = "https://www.ebookfrenzy.com/book_examples/car_logos/" + item.substringBefore(" ") + "_logo.png"
-
-    Image(
-        painter = rememberImagePainter(url),
-        contentDescription = "car image",
-        contentScale = ContentScale.Fit,
-        modifier = Modifier.size(75.dp)
-    )
+fun ColorBox(modifier: Modifier) {
+    Box(Modifier.padding(1.dp).size(width = 50.dp, height = 10.dp).then(modifier))
 }
 
 @Preview(showBackground = true)
 @Composable
 fun DefaultPreview() {
-    val itemArray: Array<String> = arrayOf("Cadillac Eldorado",
-        "Ford Fairlane", "Plymouth Fury")
-
     ExampleMTheme {
-        MainScreen(itemArray = itemArray)
+        MainScreen()
     }
 }
