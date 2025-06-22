@@ -3,17 +3,28 @@ package com.example.exampleM
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.IntOffset
+import androidx.wear.compose.material.ExperimentalWearMaterialApi
+import androidx.wear.compose.material.FractionalThreshold
+import androidx.wear.compose.material.rememberSwipeableState
+import androidx.wear.compose.material.swipeable
+import kotlin.math.roundToInt
+
 import com.example.exampleM.ui.theme.ExampleMTheme
 
 class MainActivity : ComponentActivity() {
@@ -21,6 +32,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             ExampleMTheme {
+                // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
@@ -32,67 +44,74 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterialApi::class, ExperimentalWearMaterialApi::class)
 @Composable
 fun MainScreen() {
-    var selectedItem by remember { mutableStateOf(0) }
+    val parentBoxWidth = 320.dp
+    val childBoxSides = 30.dp
 
-    val items = listOf("Home", "Settings", "Favorites")
-    val icons = listOf(Icons.Filled.Home, Icons.Filled.Settings, Icons.Filled.Favorite)
+    val swipeableState = rememberSwipeableState("L")
+    val widthPx = with(LocalDensity.current) {
+        (parentBoxWidth - childBoxSides).toPx() }
 
-    Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("Theme Demo") }
-            )
-        },
-        floatingActionButton = {
-            FloatingActionButton(onClick = { /* FAB 클릭 동작 */ }) {
-                Icon(Icons.Filled.Favorite, contentDescription = "FAB")
-            }
-        },
-        bottomBar = {
-            NavigationBar {
-                items.forEachIndexed { index, item ->
-                    NavigationBarItem(
-                        icon = { Icon(icons[index], contentDescription = item) },
-                        label = { Text(item) },
-                        selected = selectedItem == index,
-                        onClick = { selectedItem = index },
-                        alwaysShowLabel = true
-                    )
-                }
-            }
-        }
-    ) { innerPadding ->
+    val anchors = mapOf(0f to "L", widthPx / 2 to "C", widthPx to "R")
+
+    Box {
         Box(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
+                .padding(20.dp)
+                .width(parentBoxWidth)
+                .height(childBoxSides)
+                .swipeable(
+                    state = swipeableState,
+                    anchors = anchors,
+                    thresholds = { _, _ -> FractionalThreshold(0.5f) },
+                    orientation = Orientation.Horizontal
+                )
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(24.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+            Box(
+                Modifier.fillMaxWidth().height(5.dp).background(Color.DarkGray)
+                    .align(Alignment.CenterStart)
+            )
+            Box(
+                Modifier.size(10.dp).background(
+                    Color.DarkGray,
+                    shape = CircleShape
+                ).align(Alignment.CenterStart)
+            )
+            Box(
+                Modifier.size(10.dp).background(
+                    Color.DarkGray,
+                    shape = CircleShape
+                ).align(Alignment.Center)
+            )
+            Box(
+                Modifier.size(10.dp).background(
+                    Color.DarkGray,
+                    shape = CircleShape
+                ).align(Alignment.CenterEnd)
+            )
+
+            Box(
+                Modifier
+                    .offset { IntOffset(swipeableState.offset.value.roundToInt(), 0) }
+                    .size(childBoxSides)
+                    .background(Color.Blue),
+                contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "A Theme Demo",
-                    style = MaterialTheme.typography.headlineMedium
+                    swipeableState.currentValue,
+                    color = Color.White,
+                    fontSize = 22.sp
                 )
-
-                Button(onClick = { /* 버튼 클릭 동작 */ }) {
-                    Text("MD3 Button")
-                }
             }
         }
     }
 }
 
-@Preview(showBackground = true, showSystemUi = true)
+@Preview(showBackground = true)
 @Composable
-fun PreviewMainScreen() {
+fun DefaultPreview() {
     ExampleMTheme {
         MainScreen()
     }
