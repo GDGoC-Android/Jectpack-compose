@@ -10,23 +10,37 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.sp
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.padding
-import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.Image
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.Alignment
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.draw.clip
-
 import com.example.exampleM.ui.theme.ExampleMTheme
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.*
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Card
+import androidx.compose.ui.Alignment
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.foundation.*
+import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.material3.*
+import androidx.compose.animation.AnimatedVisibility
+
+import kotlinx.coroutines.launch
+
+import coil.compose.rememberImagePainter
 
 class MainActivity : ComponentActivity() {
+
+    private var itemArray: Array<String>? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
+
+        itemArray = resources.getStringArray(R.array.car_array)
+
         super.onCreate(savedInstanceState)
         setContent {
             ExampleMTheme {
@@ -35,55 +49,122 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    DemoScreen()
+                    MainScreen(itemArray = itemArray as Array<out String>)
                 }
             }
         }
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class, androidx.compose.animation.ExperimentalAnimationApi::class)
 @Composable
-fun DemoScreen() {
+fun MainScreen(itemArray: Array<out String>) {
 
-    val modifier = Modifier
-        .border(width = 2.dp, color = Color.Black)
-        .padding(all = 10.dp)
+    val listState = rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
+    val displayButton = listState.firstVisibleItemIndex > 5
 
-    Column(
-        Modifier.padding(20.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
+    val context = LocalContext.current
+    val groupedItems = itemArray.groupBy { it.substringBefore(' ') }
 
-        Text(
-            "Hello Compose",
-            modifier = modifier,
-            fontSize = 40.sp,
-            fontWeight = FontWeight.Bold
-        )
-        Spacer(Modifier.height(16.dp))
-        CustomImage(R.drawable.vacation,
-            Modifier
-                .padding(16.dp)
-                .width(270.dp)
-                .clip(shape = RoundedCornerShape(30.dp))
-        )
+    val onListItemClick = { text : String ->
+
+        Toast.makeText(
+            context,
+            text,
+            Toast.LENGTH_SHORT
+        ).show()
+    }
+
+    Box {
+        LazyColumn(
+            state = listState,
+            contentPadding = PaddingValues(bottom = 40.dp)
+        ) {
+            groupedItems.forEach { (manufacturer, models) ->
+
+                stickyHeader {
+                    Text(
+                        text = manufacturer,
+                        color = Color.White,
+                        modifier = Modifier
+                            .background(Color.Gray)
+                            .padding(5.dp)
+                            .fillMaxWidth()
+                    )
+                }
+
+                items(models) { model ->
+                    MyListItem(item = model, onItemClick = onListItemClick)
+                }
+            }
+        }
+
+        AnimatedVisibility(visible = displayButton,
+            Modifier.align(Alignment.BottomCenter)) {
+
+            OutlinedButton(
+                onClick = {
+                    coroutineScope.launch {
+                        listState.scrollToItem(0)
+                    }
+                },
+                border = BorderStroke(1.dp, Color.Gray),
+                shape = RoundedCornerShape(50),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = Color.DarkGray
+                ),
+                modifier = Modifier.padding(5.dp)
+            ) {
+                Text(text = "Top")
+            }
+        }
+    }
+}
+
+
+@Composable
+fun MyListItem(item: String, onItemClick: (String) -> Unit) {
+    Card(
+        Modifier
+            .padding(8.dp)
+            .fillMaxWidth()
+            .clickable { onItemClick(item) },
+        shape = RoundedCornerShape(10.dp),
+        elevation = 5.dp) {
+
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            ImageLoader(item)
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = item,
+                style = MaterialTheme.typography.headlineLarge,
+                modifier = Modifier.padding(8.dp)
+            )
+        }
     }
 }
 
 @Composable
-fun CustomImage(image: Int,  modifier: Modifier = Modifier) {
+fun ImageLoader(item: String) {
+
+    val url = "https://www.ebookfrenzy.com/book_examples/car_logos/" + item.substringBefore(" ") + "_logo.png"
+
     Image(
-        painter = painterResource(image),
-        contentDescription = null,
-        modifier
+        painter = rememberImagePainter(url),
+        contentDescription = "car image",
+        contentScale = ContentScale.Fit,
+        modifier = Modifier.size(75.dp)
     )
 }
 
 @Preview(showBackground = true)
 @Composable
 fun DefaultPreview() {
+    val itemArray: Array<String> = arrayOf("Cadillac Eldorado",
+        "Ford Fairlane", "Plymouth Fury")
+
     ExampleMTheme {
-        DemoScreen()
+        MainScreen(itemArray = itemArray)
     }
 }
