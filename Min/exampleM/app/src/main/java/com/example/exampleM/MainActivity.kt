@@ -6,18 +6,18 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.material3.TextField
+import androidx.compose.runtime.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.layout.layout
-import androidx.compose.ui.Alignment
-import com.example.exampleM.ui.theme.ExampleMTheme
 
-import kotlin.math.roundToInt
+import com.example.exampleM.ui.theme.ExampleMTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -38,44 +38,35 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun MainScreen() {
-    Box(contentAlignment = Alignment.Center,
-        modifier = Modifier.size(120.dp, 80.dp)) {
-        Column {
-            ColorBox(
-                Modifier.exampleLayout(0f).background(Color.Blue)
-            )
-            ColorBox(
-                Modifier.exampleLayout(0.25f).background(Color.Green)
-            )
-            ColorBox(
-                Modifier.exampleLayout(0.5f).background(Color.Yellow)
-            )
-            ColorBox(
-                Modifier.exampleLayout(0.25f).background(Color.Red)
-            )
-            ColorBox(
-                Modifier.exampleLayout(0.0f).background(Color.Magenta)
-            )
-        }
+
+    var textState by remember { mutableStateOf("") }
+
+    val onTextChange = { text: String ->
+        textState = text
     }
-}
 
-fun Modifier.exampleLayout(
-    fraction: Float
-) = layout { measurable, constraints ->
-    val placeable = measurable.measure(constraints)
+    Column(Modifier.width(200.dp).padding(5.dp)) {
+        Column(Modifier.width(IntrinsicSize.Min)) {
+            Text(
+                modifier = Modifier
+                    .padding(start = 4.dp),
+                text = textState
+            )
+            Box(Modifier.height(10.dp).fillMaxWidth().background(Color.Blue))
+        }
+        MyTextField(text = textState, onTextChange = onTextChange)
 
-    val x = -(placeable.width * fraction).roundToInt()
-
-    layout(placeable.width, placeable.height) {
-        placeable.placeRelative(x = x, y = 0)
     }
 
 }
 
 @Composable
-fun ColorBox(modifier: Modifier) {
-    Box(Modifier.padding(1.dp).size(width = 50.dp, height = 10.dp).then(modifier))
+fun MyTextField(text: String, onTextChange : (String) -> Unit) {
+
+    TextField(
+        value = text,
+        onValueChange = onTextChange
+    )
 }
 
 @Preview(showBackground = true)
