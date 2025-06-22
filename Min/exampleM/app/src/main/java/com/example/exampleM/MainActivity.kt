@@ -10,13 +10,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.sp
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Slider
-import androidx.compose.ui.unit.dp
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
+import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Column
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.graphics.Color
+import android.content.res.Configuration.UI_MODE_NIGHT_YES
 
 import com.example.exampleM.ui.theme.ExampleMTheme
 
@@ -30,67 +30,93 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    DemoScreen()
+                    Composable1()
                 }
             }
         }
     }
 }
 
+val LocalColor = staticCompositionLocalOf { Color(0xFFffdbcf) }
+
 @Composable
-fun DemoScreen() {
+fun Composable1() {
 
-    var sliderPosition by remember { mutableStateOf(20f) }
-
-    val handlePositionChange = { position : Float ->
-        sliderPosition = position
+    var color = if (isSystemInDarkTheme()) {
+        Color(0xFFa08d87)
+    } else {
+        Color(0xFFffdbcf)
     }
 
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-        modifier = Modifier.fillMaxSize()
-    ) {
+    Column {
+        Composable2()
 
-        DemoText(message = "Welcome to Compose", fontSize = sliderPosition)
+        CompositionLocalProvider(LocalColor provides color) {
+            Composable3()
+        }
 
-        Spacer(modifier = Modifier.height(150.dp))
-
-        DemoSlider(
-            sliderPosition = sliderPosition,
-            onPositionChange = handlePositionChange
-        )
-
-        Text(
-            style = MaterialTheme.typography.headlineMedium,
-            text = sliderPosition.toInt().toString() + "sp"
-        )
     }
 }
 
 @Composable
-fun DemoText(message: String, fontSize: Float) {
-    Text(
-        text = message,
-        fontSize = fontSize.sp,
-        fontWeight = FontWeight.Bold
-    )
+fun Composable2() {
+    Composable4()
 }
 
 @Composable
-fun DemoSlider(sliderPosition: Float, onPositionChange: (Float) -> Unit ) {
-    Slider(
-        modifier = Modifier.padding(10.dp),
-        valueRange = 20f..40f,
-        value = sliderPosition,
-        onValueChange = { onPositionChange(it) }
-    )
+fun Composable3() {
+    Text("Composable 3", modifier = Modifier.background(LocalColor.current))
+
+    CompositionLocalProvider(LocalColor provides Color.Red) {
+        Composable5()
+    }
 }
 
-@Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun Preview() {
+fun Composable4() {
+    Composable6()
+}
+
+@Composable
+fun Composable5() {
+    Text("Composable 5", modifier = Modifier.background(LocalColor.current))
+
+    CompositionLocalProvider(LocalColor provides Color.Green) {
+        Composable7()
+    }
+
+    CompositionLocalProvider(LocalColor provides Color.Yellow) {
+        Composable8()
+    }
+}
+
+@Composable
+fun Composable6() {
+    Text("Composable 6")
+}
+
+@Composable
+fun Composable7() {
+    Text("Composable 7", modifier = Modifier.background(LocalColor.current))
+}
+
+@Composable
+fun Composable8() {
+    Text("Composable 8",  modifier = Modifier.background(LocalColor.current))
+}
+
+@Preview(showBackground = true)
+@Composable
+fun DefaultPreview() {
     ExampleMTheme {
-        DemoScreen()
+        Composable1()
+    }
+}
+
+@Preview(showBackground = true, uiMode = UI_MODE_NIGHT_YES)
+@Composable
+fun DarkPreview() {
+    ExampleMTheme {
+        Composable1()
     }
 }
