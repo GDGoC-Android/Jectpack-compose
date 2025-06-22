@@ -10,18 +10,17 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.sp
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.Image
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.Alignment
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.Row
+import androidx.compose.material3.Button
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.foundation.horizontalScroll
+
+import kotlinx.coroutines.launch
 
 import com.example.exampleM.ui.theme.ExampleMTheme
 
@@ -35,7 +34,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    DemoScreen()
+                    MainScreen()
                 }
             }
         }
@@ -43,47 +42,71 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun DemoScreen() {
+fun MainScreen() {
+    ColumnList()
+    // RowList()
+}
 
-    val modifier = Modifier
-        .border(width = 2.dp, color = Color.Black)
-        .padding(all = 10.dp)
+@Composable
+fun RowList() {
 
-    Column(
-        Modifier.padding(20.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
+    val scrollState = rememberScrollState()
 
-        Text(
-            "Hello Compose",
-            modifier = modifier,
-            fontSize = 40.sp,
-            fontWeight = FontWeight.Bold
-        )
-        Spacer(Modifier.height(16.dp))
-        CustomImage(R.drawable.vacation,
-            Modifier
-                .padding(16.dp)
-                .width(270.dp)
-                .clip(shape = RoundedCornerShape(30.dp))
-        )
+    Row(Modifier.horizontalScroll(scrollState)) {
+        repeat(50) {
+            Text(" $it ",
+                style = MaterialTheme.typography.headlineSmall,
+                modifier = Modifier.padding(5.dp))
+        }
     }
 }
 
 @Composable
-fun CustomImage(image: Int,  modifier: Modifier = Modifier) {
-    Image(
-        painter = painterResource(image),
-        contentDescription = null,
-        modifier
-    )
+fun ColumnList() {
+
+    val scrollState = rememberScrollState()
+    val coroutineScope = rememberCoroutineScope()
+
+    Column {
+
+        Row {
+            Button(onClick = {
+                coroutineScope.launch {
+                    scrollState.animateScrollTo(0)
+                }
+            },
+                modifier = Modifier.weight(0.5f)
+                    .padding(2.dp)) {
+                Text("Top")
+            }
+
+            Button(onClick = {
+                coroutineScope.launch {
+                    scrollState.animateScrollTo(scrollState.maxValue)
+                }
+            },
+                modifier = Modifier.weight(0.5f)
+                    .padding(2.dp)) {
+                Text("End")
+            }
+        }
+
+        Column(Modifier.verticalScroll(scrollState)) {
+            repeat(500) {
+                Text(
+                    "List Item $it",
+                    style = MaterialTheme.typography.headlineLarge,
+                    modifier = Modifier.padding(5.dp)
+                )
+            }
+        }
+    }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun DefaultPreview() {
     ExampleMTheme {
-        DemoScreen()
+        MainScreen()
     }
 }
